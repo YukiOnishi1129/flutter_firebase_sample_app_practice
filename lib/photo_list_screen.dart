@@ -68,19 +68,21 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
         controller: _controller,
         //  表示が切り替わった時
         onPageChanged: (int index) => _onPageChanged(index),
-        children: [
+        children: const [
           // 「全ての画像」を表示する部分
-          Container(
-            child: const Center(
-              child: Text('ページ:フォト'),
-            ),
-          ),
+          PhotoGridView(),
+          // Container(
+          //   child: const Center(
+          //     child: Text('ページ:フォト'),
+          //   ),
+          // ),
           // 「お気に入りした画像」を表示する部分
-          Container(
-            child: const Center(
-              child: Text('ページ:お気に入り'),
-            ),
-          )
+          PhotoGridView(),
+          // Container(
+          //   child: const Center(
+          //     child: Text('ページ:お気に入り'),
+          //   ),
+          // )
         ],
       ),
       // 画像追加ボタン
@@ -113,6 +115,71 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class PhotoGridView extends StatelessWidget {
+  const PhotoGridView({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    //ダミー画像一覧
+    final List<String> imageList = [
+      'https://placehold.jp/400x300.png?text=0',
+      'https://placehold.jp/400x300.png?text=1',
+      'https://placehold.jp/400x300.png?text=2',
+      'https://placehold.jp/400x300.png?text=3',
+      'https://placehold.jp/400x300.png?text=4',
+      'https://placehold.jp/400x300.png?text=5',
+    ];
+    return GridView.count(
+      // １行あたりに表示するWidget数
+      crossAxisCount: 2,
+      // Widget間のスペース(上下)
+      mainAxisSpacing: 8,
+      // Widget間のスペース(左右)
+      crossAxisSpacing: 8,
+      // 全体の余白
+      padding: const EdgeInsets.all(8),
+      // 画像一覧
+      children: imageList.map((String imageURL) {
+        //Stackを使い、Widgetを前後に重ねる
+        return Stack(
+          children: [
+            SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              // WidgetをTap可能にする
+              child: InkWell(
+                onTap: () => {},
+                // URLを指定して画像を表示
+                child: Image.network(
+                  imageURL,
+                  /*
+                  * 画像の表示の仕方を調整できる
+                  * 比率は維持しつつ余白が出ないようにするのでcoverを指定
+                  * https://docs-flutter-io.firebaseapp.com/flutter/painting/BoxFit-class.html
+                  * */
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            /*
+            * 　画像の上にお気に入りアイコンを重ねて表示
+            * Alignment.toRightを指定し、右上部分にアイコンを表示
+            * */
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                onPressed: () => {},
+                color: Colors.white,
+                icon: const Icon(Icons.favorite_border),
+              ),
+            )
+          ],
+        );
+      }).toList(),
     );
   }
 }
