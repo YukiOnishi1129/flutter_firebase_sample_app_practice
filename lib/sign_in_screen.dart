@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_fireabase_sample_app_practice/photo_list_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -16,6 +17,14 @@ class _SignInScreenState extends State<SignInScreen> {
       //  エラーメッセージがあるため処理を中断する
       return;
     }
+
+    //  画像一覧画面に切り替え
+    // pushReplacement: 前の画面を削除して、新しく画面を追加する
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const PhotoListScreen(),
+      ),
+    );
   }
 
   void _onSignUp() {
@@ -23,6 +32,13 @@ class _SignInScreenState extends State<SignInScreen> {
     if (_formKey.currentState?.validate() != true) {
       return;
     }
+
+    //  画像一覧画面に切り替え
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const PhotoListScreen(),
+      ),
+    );
   }
 
   @override
