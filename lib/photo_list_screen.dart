@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_fireabase_sample_app_practice/photo_view_screen.dart';
 
 class PhotoListScreen extends StatefulWidget {
   const PhotoListScreen({Key? key}) : super(key: key);
@@ -51,6 +52,15 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
     });
   }
 
+  void _onTapPhoto(String imageURL) {
+    //  最初に表示する画像のURLを指定して、画像詳細画面に切り替える
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PhotoViewScreen(imageURL: imageURL),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,21 +78,15 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
         controller: _controller,
         //  表示が切り替わった時
         onPageChanged: (int index) => _onPageChanged(index),
-        children: const [
+        children: [
           // 「全ての画像」を表示する部分
-          PhotoGridView(),
-          // Container(
-          //   child: const Center(
-          //     child: Text('ページ:フォト'),
-          //   ),
-          // ),
+          PhotoGridView(
+            onTap: (imageURL) => _onTapPhoto(imageURL),
+          ),
           // 「お気に入りした画像」を表示する部分
-          PhotoGridView(),
-          // Container(
-          //   child: const Center(
-          //     child: Text('ページ:お気に入り'),
-          //   ),
-          // )
+          PhotoGridView(
+            onTap: (imageURL) => _onTapPhoto(imageURL),
+          ),
         ],
       ),
       // 画像追加ボタン
@@ -120,7 +124,13 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
 }
 
 class PhotoGridView extends StatelessWidget {
-  const PhotoGridView({Key? key}) : super(key: key);
+  const PhotoGridView({
+    Key? key,
+    required this.onTap,
+  }) : super(key: key);
+
+  // コールバックからタップされた画像のURLを受け渡します。
+  final void Function(String imageURL) onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -133,6 +143,7 @@ class PhotoGridView extends StatelessWidget {
       'https://placehold.jp/400x300.png?text=4',
       'https://placehold.jp/400x300.png?text=5',
     ];
+
     return GridView.count(
       // １行あたりに表示するWidget数
       crossAxisCount: 2,
@@ -152,7 +163,8 @@ class PhotoGridView extends StatelessWidget {
               height: double.infinity,
               // WidgetをTap可能にする
               child: InkWell(
-                onTap: () => {},
+                // タップしたらコールバックを実行する
+                onTap: () => onTap(imageURL),
                 // URLを指定して画像を表示
                 child: Image.network(
                   imageURL,
