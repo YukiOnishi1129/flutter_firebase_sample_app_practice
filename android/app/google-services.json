@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "617603716533",
+    "project_id": "photo-app-a6d8d",
+    "storage_bucket": "photo-app-a6d8d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:617603716533:android:e560e77aae5c321272f5fc",
+        "android_client_info": {
+          "package_name": "com.yuki.onishi"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "617603716533-9q12i2vcg3ig8r82n8rhvco4f07unlcd.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6nEaxBzj77dajR7ftBp_X1YmsitQ6oIE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "617603716533-9q12i2vcg3ig8r82n8rhvco4f07unlcd.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
