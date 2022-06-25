@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_fireabase_sample_app_practice/photo_view_screen.dart';
+import 'package:flutter_fireabase_sample_app_practice/sign_in_screen.dart';
 
 class PhotoListScreen extends StatefulWidget {
   const PhotoListScreen({Key? key}) : super(key: key);
@@ -61,6 +63,21 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
     );
   }
 
+  Future<void> _onSignOut() async {
+    //  ログアウト処理
+    await FirebaseAuth.instance.signOut();
+
+    /*
+    * ログアウトに成功したらログイン画面に戻す
+    * 現在の画面は不要になるのでpushReplacementを使う
+    * */
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => const SignInScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,7 +86,7 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
         actions: [
           //  ログアウトボタン
           IconButton(
-            onPressed: () => {},
+            onPressed: () => _onSignOut(),
             icon: const Icon(Icons.exit_to_app),
           ),
         ],
