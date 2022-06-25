@@ -16,22 +16,43 @@ class _SignInScreenState extends State<SignInScreen> {
   //パスワード用のTextEditingController
   final TextEditingController _passwordController = TextEditingController();
 
-  void _onSignIn() {
-    //  入力内容を確認する
-    if (_formKey.currentState?.validate() != true) {
-      //  エラーメッセージがあるため処理を中断する
-      return;
-    }
+  void _onSignIn() async {
+    try {
+      //  入力内容を確認する
+      if (_formKey.currentState?.validate() != true) {
+        return;
+      }
 
-    //  画像一覧画面に切り替え
-    // pushReplacement: 前の画面を削除して、新しく画面を追加する
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const PhotoListScreen(),
-      ),
-    );
+      //  入力された内容を元にログイン処理を行う
+      final String email = _emailController.text;
+      final String password = _passwordController.text;
+      await FirebaseAuth.instance
+          .signInWithEmailAndPassword(email: email, password: password);
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => PhotoListScreen(),
+        ),
+      );
+    } catch (e) {
+      //  失敗したらエラーメッセージを表示
+      await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('エラー'),
+            content: Text(
+              e.toString(),
+            ),
+          );
+        },
+      );
+    }
   }
 
+  /*
+  * 会員登録処理
+  * */
   Future<void> _onSignUp() async {
     try {
       //  入力内容を確認する
@@ -125,7 +146,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
                 SizedBox(
                   width: double.infinity,
-                  //  ボタン
+                  //  ボタン(ログイン)
                   child: ElevatedButton(
                     onPressed: () => _onSignIn(),
                     child: const Text('ログイン'),
