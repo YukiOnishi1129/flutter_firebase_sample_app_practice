@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_fireabase_sample_app_practice/photo_view_screen.dart';
 import 'package:flutter_fireabase_sample_app_practice/sign_in_screen.dart';
@@ -28,6 +32,30 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
     setState(() {
       _currentIndex = index;
     });
+  }
+
+  Future<void> _onAddPhoto() async {
+    //  画像ファイルを選択
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    //  画像ファイルが選択された場合
+    if (result != null) {
+      //  ログイン中のユーザー情報を取得
+      final User user = FirebaseAuth.instance.currentUser!;
+
+      //  フォルダとファイル名を指定し画像ファイルをアップロード
+      final int timestamp = DateTime.now().microsecondsSinceEpoch;
+      final File file = File(result.files.single.path!);
+      final String name = file.path.split('/').last;
+      final String path = '${timestamp}_$name';
+      final TaskSnapshot task = await FirebaseStorage.instance
+          .ref()
+          .child('users/${user.uid}/photos') // フォルダ名
+          .child(path) // ファイル名
+          .putFile(file); // 画像ファイル
+    }
   }
 
   void _onTapBottomNavigationItem(int index) {
@@ -108,7 +136,7 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
       ),
       // 画像追加ボタン
       floatingActionButton: FloatingActionButton(
-        onPressed: () => {},
+        onPressed: () => _onAddPhoto(),
         child: const Icon(Icons.add),
       ),
       //  画像下部のボタン部分
