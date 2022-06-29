@@ -1,4 +1,9 @@
+import 'dart:io';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_fireabase_sample_app_practice/photo_view_screen.dart';
 import 'package:flutter_fireabase_sample_app_practice/sign_in_screen.dart';
@@ -30,6 +35,47 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
     });
   }
 
+  Future<void> _onAddPhoto() async {
+    //  画像ファイルを選択
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    //  画像ファイルが選択された場合
+    if (result != null) {
+      //  ログイン中のユーザー情報を取得
+      final User user = FirebaseAuth.instance.currentUser!;
+
+      //  フォルダとファイル名を指定し画像ファイルをアップロード
+      final int timestamp = DateTime.now().microsecondsSinceEpoch;
+      final File file = File(result.files.single.path!);
+      final String name = file.path.split('/').last;
+      final String path = '${timestamp}_$name';
+      final TaskSnapshot task = await FirebaseStorage.instance
+          .ref()
+          .child('users/${user.uid}/photos') // フォルダ名
+          .child(path) // ファイル名
+          .putFile(file); // 画像ファイル
+
+      //  アップロードした画像のURLを取得
+      final String imageURL = await task.ref.getDownloadURL();
+      //  アップロードした画像の保存先を取得
+      final String imagePath = task.ref.fullPath;
+      //  データ
+      final data = {
+        'imageURL': imageURL,
+        'imagePath': imagePath,
+        'isFavorite': false,
+        'createdAt': Timestamp.now(),
+      };
+      //  データをCloudFirestoreに保存
+      await FirebaseFirestore.instance
+          .collection('users/${user.uid}/photos') // コレクション
+          .doc() // ドキュメント(何も指定しない場合は自動的にIDが決まる)
+          .set(data); // データ
+    }
+  }
+
   void _onTapBottomNavigationItem(int index) {
     //  PageViewで表示するWidgetを切り替える
     _controller.animateToPage(
@@ -54,11 +100,12 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
     });
   }
 
-  void _onTapPhoto(String imageURL) {
+  void _onTapPhoto(String imageURL, List<String> imageList) {
     //  最初に表示する画像のURLを指定して、画像詳細画面に切り替える
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PhotoViewScreen(imageURL: imageURL),
+        builder: (_) =>
+            PhotoViewScreen(imageURL: imageURL, imageList: imageList),
       ),
     );
   }
@@ -80,6 +127,9 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ログインしているユーザーの情報を取得
+    final User user = FirebaseAuth.instance.currentUser!;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Photo App'),
@@ -91,24 +141,47 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
           ),
         ],
       ),
-      body: PageView(
-        controller: _controller,
-        //  表示が切り替わった時
-        onPageChanged: (int index) => _onPageChanged(index),
-        children: [
-          // 「全ての画像」を表示する部分
-          PhotoGridView(
-            onTap: (imageURL) => _onTapPhoto(imageURL),
-          ),
-          // 「お気に入りした画像」を表示する部分
-          PhotoGridView(
-            onTap: (imageURL) => _onTapPhoto(imageURL),
-          ),
-        ],
+      body: StreamBuilder<QuerySnapshot>(
+        // CloudFirestoreからデータを取得
+        stream: FirebaseFirestore.instance
+            .collection('users/${user.uid}/photos')
+            .orderBy('createdAt', descending: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          // CloudFirestoreからデータを取得中の場合
+          if (snapshot.hasData == false) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+          //CloudFirestoreからデータを取得完了した場合
+          final QuerySnapshot query = snapshot.data!;
+          // 画像のURL一覧を作成
+          final List<String> imageList =
+              query.docs.map((doc) => doc.get('imageURL') as String).toList();
+
+          return PageView(
+            controller: _controller,
+            //  表示が切り替わった時
+            onPageChanged: (int index) => _onPageChanged(index),
+            children: [
+              // 「全ての画像」を表示する部分
+              PhotoGridView(
+                imageList: imageList,
+                onTap: (imageURL) => _onTapPhoto(imageURL, imageList),
+              ),
+              // 「お気に入りした画像」を表示する部分
+              PhotoGridView(
+                imageList: [],
+                onTap: (imageURL) => _onTapPhoto(imageURL, imageList),
+              ),
+            ],
+          );
+        },
       ),
       // 画像追加ボタン
       floatingActionButton: FloatingActionButton(
-        onPressed: () => {},
+        onPressed: () => _onAddPhoto(),
         child: const Icon(Icons.add),
       ),
       //  画像下部のボタン部分
@@ -143,23 +216,25 @@ class _PhotoListScreenState extends State<PhotoListScreen> {
 class PhotoGridView extends StatelessWidget {
   const PhotoGridView({
     Key? key,
+    required this.imageList,
     required this.onTap,
   }) : super(key: key);
 
+  final List<String> imageList;
   // コールバックからタップされた画像のURLを受け渡します。
   final void Function(String imageURL) onTap;
 
   @override
   Widget build(BuildContext context) {
     //ダミー画像一覧
-    final List<String> imageList = [
-      'https://placehold.jp/400x300.png?text=0',
-      'https://placehold.jp/400x300.png?text=1',
-      'https://placehold.jp/400x300.png?text=2',
-      'https://placehold.jp/400x300.png?text=3',
-      'https://placehold.jp/400x300.png?text=4',
-      'https://placehold.jp/400x300.png?text=5',
-    ];
+    // final List<String> imageList = [
+    //   'https://placehold.jp/400x300.png?text=0',
+    //   'https://placehold.jp/400x300.png?text=1',
+    //   'https://placehold.jp/400x300.png?text=2',
+    //   'https://placehold.jp/400x300.png?text=3',
+    //   'https://placehold.jp/400x300.png?text=4',
+    //   'https://placehold.jp/400x300.png?text=5',
+    // ];
 
     return GridView.count(
       // １行あたりに表示するWidget数
